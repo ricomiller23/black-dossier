@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useGameStore } from '@/lib/store'
 import { TacticalBlueprintMap } from '../map/TacticalBlueprintMap'
@@ -25,7 +25,10 @@ import {
   FileText,
   Maximize2,
   Minimize2,
-  Expand
+  Expand,
+  CheckCircle2,
+  Footprints,
+  Sparkles
 } from 'lucide-react'
 
 export const PlayCockpit: React.FC = () => {
@@ -42,12 +45,20 @@ export const PlayCockpit: React.FC = () => {
   const toggleSound = useGameStore((s) => s.toggleSound)
   const toggleCRT = useGameStore((s) => s.toggleCRT)
   const finishMission = useGameStore((s) => s.finishMission)
+  const latestActionOutcome = useGameStore((s) => s.latestActionOutcome)
 
   const [activeTab, setActiveTab] = useState<'map' | 'corkboard' | 'combat' | 'chase'>('map')
   const [customAction, setCustomAction] = useState('')
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [isDeckExpanded, setIsDeckExpanded] = useState(false)
   const [isTheaterOpen, setIsTheaterOpen] = useState(false)
+
+  // Ref to automatically auto-scroll narrative feed down to the latest entry
+  const logsEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [logs])
 
   // Listen for Escape key to close theater / collapse deck
   useEffect(() => {
@@ -97,6 +108,11 @@ export const PlayCockpit: React.FC = () => {
           <span className="text-[10px] text-stone-500 font-bold hidden md:inline-block">
             [{blueprint.city.toUpperCase()}]
           </span>
+          {/* Active Sector Location Tag in Top Bar */}
+          <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-600 text-cyan-300 text-[10px] font-bold">
+            <Footprints className="w-3 h-3 text-cyan-400" />
+            <span>SECTOR: {currentScene?.venueName || "Outer Perimeter"}</span>
+          </div>
         </div>
 
         {/* Global Controls & Metrics */}
@@ -253,10 +269,10 @@ export const PlayCockpit: React.FC = () => {
         </aside>
 
         {/* =====================================================================
-            ZONE 2 (CENTER): NARRATIVE FEED & INTERACTIVE ACTION CONSOLE
+            ZONE 2 (CENTER): NARRATIVE FEED & IMMEDIATE ACTION RESULTS CONSOLE
             ===================================================================== */}
         <main className="flex flex-col justify-between h-full rounded-xl bg-[#0B0E14] border border-[#C9A227]/30 shadow-2xl p-3 sm:p-4 overflow-hidden">
-          {/* Narrative Transcript Log */}
+          {/* Narrative Transcript Log (Auto-Scrolls Down Automatically) */}
           <div className="flex-1 overflow-y-auto space-y-3 pr-1 font-mono text-xs sm:text-sm leading-relaxed">
             {logs.map((log) => (
               <div
@@ -278,10 +294,63 @@ export const PlayCockpit: React.FC = () => {
                 <p className="whitespace-pre-line">{log.text}</p>
               </div>
             ))}
+            {/* Auto-scroll anchor */}
+            <div ref={logsEndRef} />
           </div>
 
+          {/* ===================================================================
+              IMMEDIATE ACTION RESULTS HUD BOX (Visible at once without scrolling!)
+              =================================================================== */}
+          <AnimatePresence>
+            {latestActionOutcome && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                className="my-2 p-3 rounded-xl bg-gradient-to-r from-[#0d1627] to-[#0a1120] border-2 border-cyan-500/80 shadow-2xl font-mono shrink-0"
+              >
+                <div className="flex items-center justify-between pb-1.5 border-b border-cyan-800/50 mb-1.5">
+                  <div className="flex items-center gap-1.5 text-xs text-amber-300 font-bold uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    <span>LATEST TACTICAL ACTION OUTCOME</span>
+                  </div>
+                  <span className="text-[10px] text-stone-400">{latestActionOutcome.timestamp}</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex-1">
+                    <div className="text-xs text-stone-300 font-bold">
+                      ACTION: <span className="text-white">"{latestActionOutcome.action}"</span>
+                    </div>
+                    <p className="text-xs text-cyan-200 mt-1 leading-snug">
+                      {latestActionOutcome.response}
+                    </p>
+                  </div>
+
+                  {/* Dice Result Badge */}
+                  <div
+                    className={`px-3 py-1.5 rounded-lg border text-center font-black text-xs uppercase tracking-wider shrink-0 ${
+                      latestActionOutcome.result.outcome === 'CRITICAL'
+                        ? 'bg-emerald-950 text-emerald-300 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                        : latestActionOutcome.result.outcome === 'SUCCESS'
+                        ? 'bg-cyan-950 text-cyan-300 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                        : latestActionOutcome.result.outcome === 'FUMBLE'
+                        ? 'bg-red-950 text-red-300 border-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                        : 'bg-amber-950 text-amber-300 border-amber-500'
+                    }`}
+                  >
+                    <div>{latestActionOutcome.result.outcome}</div>
+                    <div className="text-[10px] font-normal text-stone-300">
+                      ROLL {latestActionOutcome.result.roll} / {latestActionOutcome.result.target}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Action Selector & Quick Tactical Buttons */}
-          <div className="mt-3 pt-3 border-t border-stone-800 flex flex-col gap-2 shrink-0">
+          <div className="mt-2 pt-2 border-t border-stone-800 flex flex-col gap-2 shrink-0">
             {/* 3 Suggested Action Chips */}
             <div className="flex flex-col sm:flex-row gap-1.5">
               {suggestedActions.map((action, i) => (

@@ -33,6 +33,8 @@ interface GameState {
   chaseProgress: number
   coverIntegrity: number
   revealedClues: string[]
+  visitedSceneIds: string[]
+  latestActionOutcome: { action: string; result: TestResult; response: string; timestamp: string } | null
   logs: LogEntry[]
   suggestedActions: string[]
   diceResult: TestResult | null
@@ -82,6 +84,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   chaseProgress: 5,
   coverIntegrity: 100,
   revealedClues: [],
+  visitedSceneIds: [],
+  latestActionOutcome: null,
   logs: [],
   suggestedActions: [],
   diceResult: null,
@@ -157,6 +161,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       chaseProgress: 5,
       coverIntegrity: 100,
       revealedClues: [],
+      visitedSceneIds: [startScene.id],
+      latestActionOutcome: null,
       logs: [initialLog],
       missionMode: mode,
       suggestedActions: [
@@ -189,8 +195,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       ? ['Confront primary target directly', 'Override central security console', 'Rig timed explosive charge']
       : ['Search for surveillance clues', 'Conceal behind cover', 'Initiate quiet radio relay']
 
+    const visited = get().visitedSceneIds || []
     set({
       currentScene: next,
+      visitedSceneIds: [...new Set([...visited, sceneId])],
       logs: [...logs, sceneLog],
       suggestedActions: suggestions
     })
@@ -266,7 +274,13 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set({
       logs: [...logs, playerLog, handlerLog],
-      revealedClues: newRevealed
+      revealedClues: newRevealed,
+      latestActionOutcome: {
+        action: actionText,
+        result,
+        response: handlerResponse,
+        timestamp: new Date().toLocaleTimeString()
+      }
     })
   },
 
