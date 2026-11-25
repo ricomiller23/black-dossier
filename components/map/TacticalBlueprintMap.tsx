@@ -89,6 +89,32 @@ export const TacticalBlueprintMap: React.FC = () => {
         </div>
       </div>
 
+      {/* 2.5 Active Sentries Quick Takedown Strip */}
+      <div className="relative z-30 px-3 py-1.5 bg-[#090f1a]/90 border-b border-stone-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+        <div className="flex items-center gap-1.5 text-stone-400 text-[11px]">
+          <Crosshair className="w-3.5 h-3.5 text-red-400" />
+          <span>SENTRY TARGETING:</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {sentries.map((s) => (
+            <div key={s.id} className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/60 border border-stone-800 text-[10px]">
+              <span className={s.status === 'patrolling' ? 'text-amber-300 font-bold' : 'text-stone-600 line-through'}>
+                {s.name} [{s.status.toUpperCase()}]
+              </span>
+              {s.status === 'patrolling' && (
+                <button
+                  type="button"
+                  onClick={() => neutralizeSentry(s.id)}
+                  className="px-2 py-0.5 rounded bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-[9px] font-bold uppercase transition-all cursor-pointer active:scale-95 shadow"
+                >
+                  SILENT TAKEDOWN
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* 3. Sweeping Radar Beam Animation */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
         <motion.div
