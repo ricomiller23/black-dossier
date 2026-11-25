@@ -1,0 +1,243 @@
+import { z } from 'zod'
+
+export const AttributeNameSchema = z.enum(['MGT', 'RFX', 'NRV', 'STA', 'INT', 'PER', 'PRS'])
+export type AttributeName = z.infer<typeof AttributeNameSchema>
+
+export const AttributesSchema = z.object({
+  MGT: z.number().min(15).max(95),
+  RFX: z.number().min(15).max(95),
+  NRV: z.number().min(15).max(95),
+  STA: z.number().min(15).max(95),
+  INT: z.number().min(15).max(95),
+  PER: z.number().min(15).max(95),
+  PRS: z.number().min(15).max(95)
+})
+export type Attributes = z.infer<typeof AttributesSchema>
+
+export const SkillNameSchema = z.enum([
+  'Firearms',
+  'Melee',
+  'Stealth',
+  'Driving',
+  'Electronics',
+  'Lockpicking',
+  'Forgery',
+  'Languages',
+  'Disguise',
+  'Persuasion',
+  'Deception',
+  'Surveillance',
+  'Search',
+  'First Aid',
+  'Demolitions',
+  'Interrogation',
+  'Athletics',
+  'Computers'
+])
+export type SkillName = z.infer<typeof SkillNameSchema>
+
+export const DivisionSchema = z.enum([
+  'Section F — Field Recovery',
+  'Section K — Kinetic Ops',
+  'Section S — Signals & Inquiry',
+  'Section V — Veil'
+])
+export type Division = z.infer<typeof DivisionSchema>
+
+export const BackgroundSchema = z.enum([
+  'Ex-military',
+  'Academic',
+  'Journalist',
+  'Career criminal',
+  "Diplomat's child",
+  'Hacker',
+  'Athlete',
+  'Medic'
+])
+export type Background = z.infer<typeof BackgroundSchema>
+
+export const HitLocationSchema = z.enum(['head', 'chest', 'abdomen', 'arms', 'legs'])
+export type HitLocation = z.infer<typeof HitLocationSchema>
+
+export const WoundStateSchema = z.enum(['Fine', 'Grazed', 'Wounded', 'Critical', 'Down', 'Dead'])
+export type WoundState = z.infer<typeof WoundStateSchema>
+
+export const ItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.enum(['weapon', 'armor', 'gear', 'document', 'gadget']),
+  description: z.string(),
+  concealability: z.enum(['Pocket', 'Holster', 'Coat', 'Briefcase', 'Open Carry']),
+  cost: z.number().default(0),
+  noise: z.enum(['Silent', 'Low', 'Moderate', 'Loud']).default('Silent'),
+  baseDamage: z.number().optional(),
+  ammo: z.number().optional(),
+  maxAmmo: z.number().optional(),
+  range: z.enum(['Close', 'Medium', 'Long']).optional(),
+  armorPoints: z.number().optional(),
+  protects: z.array(HitLocationSchema).optional()
+})
+export type Item = z.infer<typeof ItemSchema>
+
+export const PortraitConfigSchema = z.object({
+  faceShape: z.number().min(0).max(4).default(0),
+  skinTone: z.string().default('#E0AC69'),
+  hairStyle: z.number().min(0).max(5).default(1),
+  hairColor: z.string().default('#2B1A09'),
+  glasses: z.boolean().default(false),
+  sunglasses: z.boolean().default(false),
+  scar: z.boolean().default(false),
+  facialHair: z.number().min(0).max(3).default(0),
+  clothingStyle: z.enum(['Trench Coat', 'Tuxedo', 'Field Tactical', 'Leather Jacket', 'Diplomatic Suit']).default('Trench Coat'),
+  clothingColor: z.string().default('#1A1E24')
+})
+export type PortraitConfig = z.infer<typeof PortraitConfigSchema>
+
+export const AgentSchema = z.object({
+  id: z.string(),
+  codename: z.string(),
+  realName: z.string(),
+  nationality: z.string(),
+  age: z.number().min(20).max(65),
+  division: DivisionSchema,
+  background: BackgroundSchema,
+  contact: z.string(),
+  attributes: AttributesSchema,
+  skills: z.record(SkillNameSchema, z.number().min(0).max(95)),
+  maxWP: z.number(),
+  currentWP: z.number(),
+  maxComposure: z.number(),
+  currentComposure: z.number(),
+  initiative: z.number(),
+  coverIntegrity: z.number().min(0).max(100),
+  edgePoints: z.number().min(0).max(3),
+  woundState: WoundStateSchema,
+  clearanceLevel: z.number().min(1).max(5),
+  merit: z.number().min(0),
+  funds: z.number().min(0),
+  inventory: z.array(ItemSchema),
+  portrait: PortraitConfigSchema,
+  status: z.enum(['Active', 'MIA', 'KIA', 'Compromised', 'Retired']).default('Active')
+})
+export type Agent = z.infer<typeof AgentSchema>
+
+export const TestResultSchema = z.object({
+  roll: z.number(),
+  target: z.number(),
+  modifier: z.number(),
+  margin: z.number(),
+  outcome: z.enum(['CRITICAL', 'SUCCESS', 'FAILURE', 'FUMBLE']),
+  actor: z.string(),
+  skill: SkillNameSchema,
+  reason: z.string()
+})
+export type TestResult = z.infer<typeof TestResultSchema>
+
+export const NPCSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  role: z.string(),
+  faction: z.string(),
+  disposition: z.number().min(-3).max(3), // -3 Hostile to +3 Devoted
+  secret: z.string(),
+  status: z.enum(['Alive', 'Unconscious', 'Neutralized', 'Escaped']).default('Alive'),
+  wp: z.number(),
+  maxWP: z.number(),
+  alertReaction: z.enum(['Flee', 'Sound Alarm', 'Attack', 'Bribe', 'Freeze']),
+  weapon: ItemSchema.optional(),
+  portrait: PortraitConfigSchema.optional()
+})
+export type NPC = z.infer<typeof NPCSchema>
+
+export const SceneNodeSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  type: z.enum(['briefing', 'approach', 'infiltration', 'social', 'complication', 'climax', 'extraction', 'debrief']),
+  venueName: z.string(),
+  description: z.string(),
+  nextScenes: z.array(z.string()),
+  clues: z.array(z.string()),
+  npcs: z.array(NPCSchema),
+  hazards: z.array(z.string()),
+  securityRating: z.number().min(1).max(5)
+})
+export type SceneNode = z.infer<typeof SceneNodeSchema>
+
+export const MissionBlueprintSchema = z.object({
+  id: z.string(),
+  codeName: z.string(),
+  seed: z.string(),
+  clearance: z.number().min(1).max(5),
+  era: z.enum(['1980s Cold War', 'Modern Day']),
+  objectiveType: z.enum([
+    'recover item',
+    'extract defector',
+    'eliminate/capture target',
+    'plant device',
+    'expose mole',
+    'protect VIP',
+    'sabotage',
+    'intercept exchange'
+  ]),
+  city: z.string(),
+  country: z.string(),
+  venue: z.string(),
+  faction: z.string(),
+  twist: z.string(),
+  briefingText: z.string(),
+  scenes: z.array(SceneNodeSchema),
+  startSceneId: z.string(),
+  extractionSceneId: z.string()
+})
+export type MissionBlueprint = z.infer<typeof MissionBlueprintSchema>
+
+export const LogEntrySchema = z.object({
+  id: z.string(),
+  timestamp: z.string(),
+  speaker: z.string(), // "HANDLER", "AGENT", NPC name, or "SYSTEM"
+  text: z.string(),
+  type: z.enum(['narrative', 'dialogue', 'action', 'dice', 'combat', 'system', 'clue', 'alert']),
+  testResult: TestResultSchema.optional()
+})
+export type LogEntry = z.infer<typeof LogEntrySchema>
+
+export const AIPersonaSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  codename: z.string(),
+  role: z.enum(['ally', 'rival', 'mole']),
+  division: DivisionSchema,
+  personality: z.string(),
+  loyalty: z.number().min(0).max(100),
+  secretGoal: z.string(),
+  agent: AgentSchema
+})
+export type AIPersona = z.infer<typeof AIPersonaSchema>
+
+export const GamePhaseSchema = z.enum([
+  'TITLE',
+  'CREATION',
+  'BRIEFING',
+  'PLAY_EXPLORATION',
+  'PLAY_COMBAT',
+  'PLAY_CHASE',
+  'DEBRIEF',
+  'ARCHIVE'
+])
+export type GamePhase = z.infer<typeof GamePhaseSchema>
+
+export const EngineStateSchema = z.object({
+  mission: MissionBlueprintSchema.nullable(),
+  currentSceneId: z.string().nullable(),
+  alertLevel: z.number().min(0).max(5).default(0),
+  chaseProgress: z.number().min(0).max(10).default(5),
+  activeCombatRound: z.number().default(0),
+  turnCount: z.number().default(0),
+  playerAgent: AgentSchema.nullable(),
+  allies: z.array(AIPersonaSchema).default([]),
+  rivals: z.array(AIPersonaSchema).default([]),
+  revealedClues: z.array(z.string()).default([]),
+  log: z.array(LogEntrySchema).default([]),
+  suggestedActions: z.array(z.string()).default([])
+})
+export type EngineState = z.infer<typeof EngineStateSchema>
