@@ -16,42 +16,42 @@ export const TacticalBlueprintMap: React.FC = () => {
 
   if (!blueprint) return null
 
-  // Nodes position layout on the 800x480 blueprint canvas
+  // Nodes position layout on the 840x480 blueprint canvas
   const scenePositions: Record<string, { x: number; y: number }> = {
-    scene_1_approach: { x: 120, y: 360 },
-    scene_2_interior: { x: 340, y: 340 },
-    scene_2_social: { x: 340, y: 160 },
-    scene_3_vault: { x: 580, y: 240 },
-    scene_4_extraction: { x: 720, y: 120 }
+    scene_1_approach: { x: 130, y: 350 },
+    scene_2_interior: { x: 350, y: 340 },
+    scene_2_social: { x: 350, y: 160 },
+    scene_3_vault: { x: 590, y: 240 },
+    scene_4_extraction: { x: 730, y: 130 }
   }
 
   return (
-    <div className="relative w-full h-[360px] sm:h-[440px] md:h-[480px] rounded-xl overflow-hidden border border-[#0ea5e9]/40 bg-[#040d1a] shadow-[0_0_40px_rgba(14,165,233,0.15)] select-none">
+    <div className="relative w-full h-full min-h-[460px] sm:min-h-[540px] md:min-h-[620px] rounded-xl overflow-hidden border border-[#0ea5e9]/40 bg-[#040d1a] shadow-[0_0_50px_rgba(14,165,233,0.18)] select-none flex flex-col justify-between">
       {/* 1. Blueprint Grid Lines & Grid Numbers */}
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
           backgroundImage:
             'linear-gradient(to right, #0ea5e9 1px, transparent 1px), linear-gradient(to bottom, #0ea5e9 1px, transparent 1px)',
-          backgroundSize: '32px 32px'
+          backgroundSize: '36px 36px'
         }}
       />
 
       {/* 2. Top Status HUD Bar */}
-      <div className="absolute top-2 inset-x-3 flex items-center justify-between text-[11px] font-mono z-30 pointer-events-none">
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#081b33]/90 border border-[#0ea5e9]/40 text-[#38bdf8]">
+      <div className="relative top-0 inset-x-0 p-3 flex flex-wrap items-center justify-between text-[11px] sm:text-xs font-mono z-30 bg-[#081b33]/80 border-b border-[#0ea5e9]/30 gap-2">
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#081b33] border border-[#0ea5e9]/50 text-[#38bdf8]">
           <span className="w-2 h-2 rounded-full bg-[#38bdf8] animate-ping" />
-          <span className="font-bold uppercase tracking-wider">
-            TACTICAL BLUEPRINT // {blueprint.city.toUpperCase()}, {blueprint.country.toUpperCase()}
+          <span className="font-bold uppercase tracking-wider text-xs sm:text-sm">
+            CAD BLUEPRINT // {blueprint.city.toUpperCase()}, {blueprint.country.toUpperCase()}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/60 border border-stone-800 text-[10px] text-stone-300">
             <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span>RADAR: ACTIVE</span>
+            <span>RADAR: ACTIVE SWEEP</span>
           </div>
-          <div className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold ${
+          <div className={`flex items-center gap-1 px-2.5 py-1 rounded border text-[10px] sm:text-xs font-bold ${
             alertLevel >= 3
               ? 'border-red-500/80 bg-red-950/80 text-red-300 animate-pulse'
               : 'border-cyan-500/40 bg-cyan-950/40 text-cyan-300'
@@ -76,208 +76,195 @@ export const TacticalBlueprintMap: React.FC = () => {
       </div>
 
       {/* 4. Interactive SVG Architectural Floorplan */}
-      <svg
-        viewBox="0 0 840 480"
-        className="relative w-full h-full z-20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          {/* Glowing Filter */}
-          <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <div className="relative flex-1 w-full flex items-center justify-center p-2 z-20">
+        <svg
+          viewBox="0 0 840 480"
+          className="w-full h-full max-h-[75vh]"
+          preserveAspectRatio="xMidYMid meet"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            {/* Glowing Filter */}
+            <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
-        {/* Outer Venue Perimeter Walls */}
-        <rect
-          x="50"
-          y="60"
-          width="740"
-          height="370"
-          rx="12"
-          fill="#06182e"
-          fillOpacity="0.6"
-          stroke="#0ea5e9"
-          strokeWidth="1.5"
-          strokeDasharray="8 4"
-        />
-
-        {/* Sector Compartments */}
-        {/* Sector A: Entry Corridors */}
-        <rect x="70" y="280" width="220" height="130" fill="#0b2342" fillOpacity="0.5" stroke="#0ea5e9" strokeWidth="1" />
-        <text x="80" y="300" fill="#38bdf8" fontSize="10" fontFamily="monospace" opacity="0.7">SECTOR A: ALLEYWAY &amp; SERVICE DECK</text>
-
-        {/* Sector B1: Maintenance Sub-Level */}
-        <rect x="310" y="270" width="220" height="140" fill="#0b2342" fillOpacity="0.5" stroke="#0ea5e9" strokeWidth="1" />
-        <text x="320" y="290" fill="#38bdf8" fontSize="10" fontFamily="monospace" opacity="0.7">SECTOR B-1: STEAM GALLERY</text>
-
-        {/* Sector B2: VIP Reception */}
-        <rect x="310" y="80" width="220" height="170" fill="#0b2342" fillOpacity="0.5" stroke="#0ea5e9" strokeWidth="1" />
-        <text x="320" y="100" fill="#38bdf8" fontSize="10" fontFamily="monospace" opacity="0.7">SECTOR B-2: MEZZANINE SALON</text>
-
-        {/* Sector C: Inner Vault Core */}
-        <rect x="550" y="150" width="220" height="170" fill="#1e1b4b" fillOpacity="0.6" stroke="#818cf8" strokeWidth="1.5" />
-        <text x="560" y="170" fill="#a5b4fc" fontSize="10" fontFamily="monospace" opacity="0.8">SECTOR C: INNER VAULT CORE [RESTRICTED]</text>
-
-        {/* Laser Tripwire Animation in Sector C */}
-        <motion.line
-          x1="550"
-          y1="220"
-          x2="770"
-          y2="220"
-          stroke="#ef4444"
-          strokeWidth="1.5"
-          animate={{ opacity: [0.3, 0.9, 0.3], y1: [190, 260, 190], y2: [190, 260, 190] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* Surveillance Cameras with Sweeping Cones */}
-        <g transform="translate(300, 75)">
-          <circle cx="0" cy="0" r="4" fill="#ef4444" />
-          <motion.path
-            d="M0 0 L-40 60 L40 60 Z"
-            fill="#ef4444"
-            fillOpacity="0.12"
-            animate={{ rotate: [-25, 35, -25] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ originX: 0, originY: 0 }}
+          {/* Outer Venue Perimeter Walls */}
+          <rect
+            x="40"
+            y="40"
+            width="760"
+            height="400"
+            rx="14"
+            fill="#06182e"
+            fillOpacity="0.75"
+            stroke="#0ea5e9"
+            strokeWidth="2"
+            strokeDasharray="8 4"
           />
-        </g>
 
-        <g transform="translate(540, 290)">
-          <circle cx="0" cy="0" r="4" fill="#ef4444" />
-          <motion.path
-            d="M0 0 L-50 70 L30 70 Z"
-            fill="#ef4444"
-            fillOpacity="0.12"
-            animate={{ rotate: [30, -30, 30] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ originX: 0, originY: 0 }}
-          />
-        </g>
+          {/* Sector Compartments */}
+          {/* Sector A: Entry Corridors */}
+          <rect x="65" y="270" width="230" height="150" fill="#0b2342" fillOpacity="0.6" stroke="#0ea5e9" strokeWidth="1.2" />
+          <text x="75" y="295" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="monospace" opacity="0.85">SECTOR A: ALLEYWAY & SERVICE DECK</text>
 
-        {/* Connecting Corridors / Data Paths */}
-        {blueprint.scenes.map((scene) => {
-          const start = scenePositions[scene.id]
-          if (!start) return null
+          {/* Sector B1: Maintenance Sub-Level */}
+          <rect x="320" y="270" width="230" height="150" fill="#0b2342" fillOpacity="0.6" stroke="#0ea5e9" strokeWidth="1.2" />
+          <text x="330" y="295" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="monospace" opacity="0.85">SECTOR B-1: STEAM GALLERY</text>
 
-          return scene.nextScenes.map((targetId) => {
-            const end = scenePositions[targetId]
-            if (!end) return null
-            const isUnlocked = currentScene?.id === scene.id || currentScene?.id === targetId
+          {/* Sector B2: VIP Reception */}
+          <rect x="320" y="60" width="230" height="190" fill="#0b2342" fillOpacity="0.6" stroke="#0ea5e9" strokeWidth="1.2" />
+          <text x="330" y="85" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="monospace" opacity="0.85">SECTOR B-2: MEZZANINE SALON</text>
+
+          {/* Sector C: Vault & Archive */}
+          <rect x="570" y="160" width="210" height="180" fill="#0b2342" fillOpacity="0.6" stroke="#0ea5e9" strokeWidth="1.2" />
+          <text x="580" y="185" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="monospace" opacity="0.85">SECTOR C: REINFORCED VAULT</text>
+
+          {/* Sector D: Rooftop Extraction */}
+          <rect x="570" y="60" width="210" height="85" fill="#08281a" fillOpacity="0.6" stroke="#10b981" strokeWidth="1.2" />
+          <text x="580" y="85" fill="#34d399" fontSize="11" fontWeight="bold" fontFamily="monospace" opacity="0.9">SECTOR D: ROOFTOP HELIPAD</text>
+
+          {/* Sweeping Laser Tripwire */}
+          <line x1="320" y1="260" x2="550" y2="260" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4 2" opacity="0.85">
+            <animate attributeName="opacity" values="0.2;1;0.2" dur="2s" repeatCount="indefinite" />
+          </line>
+
+          {/* Security Camera Conical Vision Cones */}
+          <path d="M 65 60 L 160 140 L 220 70 Z" fill="#ef4444" fillOpacity="0.12" stroke="#ef4444" strokeWidth="0.8">
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              values="-15 65 60; 25 65 60; -15 65 60"
+              dur="6s"
+              repeatCount="indefinite"
+            />
+          </path>
+          <circle cx="65" cy="60" r="5" fill="#ef4444" />
+
+          {/* Scene Connection Paths */}
+          {blueprint.scenes.map((scene) => {
+            const start = scenePositions[scene.id]
+            if (!start) return null
+
+            return scene.nextScenes.map((targetId) => {
+              const end = scenePositions[targetId]
+              if (!end) return null
+              const isUnlocked = currentScene?.id === scene.id || currentScene?.id === targetId
+
+              return (
+                <g key={`path-${scene.id}-${targetId}`}>
+                  <line
+                    x1={start.x}
+                    y1={start.y}
+                    x2={end.x}
+                    y2={end.y}
+                    stroke={isUnlocked ? '#38bdf8' : '#1e3a5f'}
+                    strokeWidth={isUnlocked ? 2.5 : 1.2}
+                    strokeDasharray={isUnlocked ? '6 4' : '2 4'}
+                  />
+                </g>
+              )
+            })
+          })}
+
+          {/* Interactive Tactical Nodes */}
+          {blueprint.scenes.map((scene) => {
+            const pos = scenePositions[scene.id]
+            if (!pos) return null
+
+            const isCurrent = currentScene?.id === scene.id
+            const isAccessible = currentScene?.nextScenes.includes(scene.id)
+            const isExtraction = scene.type === 'extraction'
+            const isClimax = scene.type === 'climax'
 
             return (
-              <g key={`path-${scene.id}-${targetId}`}>
-                <line
-                  x1={start.x}
-                  y1={start.y}
-                  x2={end.x}
-                  y2={end.y}
-                  stroke={isUnlocked ? '#38bdf8' : '#1e3a5f'}
-                  strokeWidth={isUnlocked ? 2 : 1}
-                  strokeDasharray={isUnlocked ? '6 4' : '2 4'}
-                />
-              </g>
-            )
-          })
-        })}
+              <g
+                key={scene.id}
+                className="cursor-pointer group"
+                onClick={() => {
+                  if (isAccessible) moveToScene(scene.id)
+                }}
+                onMouseEnter={() => setHoveredNode(scene.id)}
+                onMouseLeave={() => setHoveredNode(null)}
+              >
+                {/* Pulsing selection aura if current */}
+                {isCurrent && (
+                  <circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r="28"
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth="2"
+                    className="animate-ping opacity-75"
+                  />
+                )}
 
-        {/* Interactive Tactical Nodes */}
-        {blueprint.scenes.map((scene) => {
-          const pos = scenePositions[scene.id]
-          if (!pos) return null
-
-          const isCurrent = currentScene?.id === scene.id
-          const isAccessible = currentScene?.nextScenes.includes(scene.id)
-          const isExtraction = scene.type === 'extraction'
-          const isClimax = scene.type === 'climax'
-
-          return (
-            <g
-              key={scene.id}
-              className="cursor-pointer group"
-              onClick={() => {
-                if (isAccessible) moveToScene(scene.id)
-              }}
-              onMouseEnter={() => setHoveredNode(scene.id)}
-              onMouseLeave={() => setHoveredNode(null)}
-            >
-              {/* Pulsing selection aura if current */}
-              {isCurrent && (
+                {/* Node Base Circle */}
                 <circle
                   cx={pos.x}
                   cy={pos.y}
-                  r="24"
-                  fill="none"
-                  stroke="#38bdf8"
-                  strokeWidth="1.5"
-                  className="animate-ping opacity-75"
+                  r="22"
+                  fill={isCurrent ? '#0284c7' : isExtraction ? '#15803d' : isClimax ? '#b91c1c' : '#0f172a'}
+                  stroke={isCurrent ? '#7dd3fc' : isAccessible ? '#38bdf8' : '#334155'}
+                  strokeWidth={isCurrent ? 3 : 2}
+                  filter={isCurrent ? 'url(#cyanGlow)' : undefined}
                 />
-              )}
 
-              {/* Node Base Circle */}
-              <circle
-                cx={pos.x}
-                cy={pos.y}
-                r="18"
-                fill={isCurrent ? '#0284c7' : isExtraction ? '#15803d' : isClimax ? '#b91c1c' : '#0f172a'}
-                stroke={isCurrent ? '#7dd3fc' : isAccessible ? '#38bdf8' : '#334155'}
-                strokeWidth={isCurrent ? 2.5 : 1.5}
-                filter={isCurrent ? 'url(#cyanGlow)' : undefined}
-              />
+                {/* Node Icon */}
+                <text
+                  x={pos.x}
+                  y={pos.y + 5}
+                  textAnchor="middle"
+                  fontSize="13"
+                  fill="#ffffff"
+                  fontWeight="bold"
+                  fontFamily="monospace"
+                  pointerEvents="none"
+                >
+                  {scene.type === 'approach' ? '01' : scene.type === 'climax' ? 'OBJ' : isExtraction ? 'EXT' : '02'}
+                </text>
 
-              {/* Node Icon */}
-              <text
-                x={pos.x}
-                y={pos.y + 4}
-                textAnchor="middle"
-                fontSize="12"
-                fill="#ffffff"
-                fontWeight="bold"
-                fontFamily="monospace"
-                pointerEvents="none"
-              >
-                {scene.type === 'approach' ? '01' : scene.type === 'climax' ? 'OBJ' : isExtraction ? 'EXT' : '02'}
-              </text>
-
-              {/* Label Pill Below Node */}
-              <rect
-                x={pos.x - 70}
-                y={pos.y + 22}
-                width="140"
-                height="18"
-                rx="4"
-                fill="#030712"
-                fillOpacity="0.85"
-                stroke={isCurrent ? '#38bdf8' : '#1e293b'}
-                strokeWidth="1"
-              />
-              <text
-                x={pos.x}
-                y={pos.y + 34}
-                textAnchor="middle"
-                fill={isCurrent ? '#f8fafc' : '#94a3b8'}
-                fontSize="9"
-                fontWeight="bold"
-                fontFamily="sans-serif"
-                pointerEvents="none"
-              >
-                {scene.type.toUpperCase()}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
+                {/* Label Pill Below Node */}
+                <rect
+                  x={pos.x - 75}
+                  y={pos.y + 26}
+                  width="150"
+                  height="20"
+                  rx="4"
+                  fill="#030712"
+                  fillOpacity="0.9"
+                  stroke={isCurrent ? '#38bdf8' : '#1e293b'}
+                  strokeWidth="1.2"
+                />
+                <text
+                  x={pos.x}
+                  y={pos.y + 40}
+                  textAnchor="middle"
+                  fill={isCurrent ? '#f8fafc' : '#cbd5e1'}
+                  fontSize="10"
+                  fontWeight="bold"
+                  fontFamily="monospace"
+                  pointerEvents="none"
+                >
+                  {scene.type.toUpperCase()}: {scene.venueName.substring(0, 16)}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
 
       {/* 5. Bottom Interactive Node Inspector Drawer */}
-      <div className="absolute bottom-2 inset-x-3 flex items-center justify-between p-2 rounded-lg bg-[#071322]/95 border border-[#0ea5e9]/30 text-xs font-mono z-30">
+      <div className="relative bottom-0 inset-x-0 p-3 flex flex-wrap items-center justify-between bg-[#071322]/95 border-t border-[#0ea5e9]/40 text-xs sm:text-sm font-mono z-30 gap-2">
         <div>
-          <span className="text-stone-400">ACTIVE POSITION: </span>
-          <strong className="text-[#38bdf8]">{currentScene?.venueName || 'Outer Perimeter'}</strong>
+          <span className="text-stone-400">CURRENT POSITION: </span>
+          <strong className="text-[#38bdf8] text-sm">{currentScene?.venueName || 'Outer Perimeter'}</strong>
         </div>
 
         <div className="flex items-center gap-2">
@@ -290,7 +277,7 @@ export const TacticalBlueprintMap: React.FC = () => {
                 key={targetId}
                 type="button"
                 onClick={() => moveToScene(targetId)}
-                className="px-3 py-1 rounded bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-bold tracking-wider active:scale-95 transition-all shadow-md cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs sm:text-sm font-bold tracking-wider active:scale-95 transition-all shadow-lg cursor-pointer"
               >
                 BREACH TO {nextSc.type.toUpperCase()} →
               </button>

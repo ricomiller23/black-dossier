@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useGameStore } from '@/lib/store'
 import { TacticalBlueprintMap } from '../map/TacticalBlueprintMap'
@@ -22,7 +22,10 @@ import {
   Tv,
   LogOut,
   Flag,
-  FileText
+  FileText,
+  Maximize2,
+  Minimize2,
+  Expand
 } from 'lucide-react'
 
 export const PlayCockpit: React.FC = () => {
@@ -43,6 +46,20 @@ export const PlayCockpit: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'map' | 'corkboard' | 'combat' | 'chase'>('map')
   const [customAction, setCustomAction] = useState('')
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  const [isDeckExpanded, setIsDeckExpanded] = useState(false)
+  const [isTheaterOpen, setIsTheaterOpen] = useState(false)
+
+  // Listen for Escape key to close theater / collapse deck
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isTheaterOpen) setIsTheaterOpen(false)
+        else if (isDeckExpanded) setIsDeckExpanded(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isTheaterOpen, isDeckExpanded])
 
   if (!blueprint || !agent) return null
 
@@ -51,6 +68,19 @@ export const PlayCockpit: React.FC = () => {
     if (!customAction.trim()) return
     submitAction(customAction.trim())
     setCustomAction('')
+  }
+
+  const renderActiveView = () => {
+    switch (activeTab) {
+      case 'map':
+        return <TacticalBlueprintMap />
+      case 'corkboard':
+        return <EvidenceCorkboard />
+      case 'combat':
+        return <BallisticCombatView />
+      case 'chase':
+        return <ChaseTrackView />
+    }
   }
 
   return (
@@ -89,6 +119,21 @@ export const PlayCockpit: React.FC = () => {
 
           <div className="h-4 w-[1px] bg-stone-700 mx-1 hidden sm:block" />
 
+          {/* Expand View Quick Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsDeckExpanded(!isDeckExpanded)}
+            title={isDeckExpanded ? 'Reset Column Width' : 'Expand Visual Deck Width'}
+            className={`px-2.5 py-1 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer hidden lg:flex ${
+              isDeckExpanded
+                ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                : 'bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-600/40'
+            }`}
+          >
+            {isDeckExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            <span>{isDeckExpanded ? 'SHRINK DECK' : 'EXPAND DECK'}</span>
+          </button>
+
           {/* CRT & Audio Toggles */}
           <button
             type="button"
@@ -116,12 +161,22 @@ export const PlayCockpit: React.FC = () => {
         </div>
       </header>
 
-      {/* 2. MAIN 3-ZONE COCKPIT */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[280px_1fr_480px] gap-3 p-2 sm:p-4 overflow-hidden h-[calc(100dvh-100px)]">
+      {/* 2. MAIN 3-ZONE COCKPIT (Zone 3 expands dynamically) */}
+      <div
+        className={`flex-1 grid grid-cols-1 transition-all duration-300 ease-in-out gap-3 p-2 sm:p-4 overflow-hidden h-[calc(100dvh-100px)] ${
+          isDeckExpanded
+            ? 'lg:grid-cols-[0px_340px_1fr]'
+            : 'lg:grid-cols-[240px_1fr_minmax(560px,1.35fr)] xl:grid-cols-[260px_1fr_minmax(660px,1.45fr)] 2xl:grid-cols-[280px_1fr_minmax(780px,1.6fr)]'
+        }`}
+      >
         {/* =====================================================================
-            ZONE 1 (LEFT): OPERATIVE STATUS DOSSIER (Collapsible on mobile)
+            ZONE 1 (LEFT): OPERATIVE STATUS DOSSIER (Collapses when expanded)
             ===================================================================== */}
-        <aside className="hidden lg:flex flex-col justify-between p-3.5 rounded-xl bg-[#0D1016] border border-[#C9A227]/30 shadow-xl overflow-y-auto">
+        <aside
+          className={`flex-col justify-between p-3.5 rounded-xl bg-[#0D1016] border border-[#C9A227]/30 shadow-xl overflow-y-auto transition-all duration-300 ${
+            isDeckExpanded ? 'hidden' : 'hidden lg:flex'
+          }`}
+        >
           <div>
             <div className="flex items-center gap-3 pb-3 border-b border-stone-800 mb-3">
               <AgentPortrait portrait={agent.portrait} size="md" />
@@ -262,12 +317,12 @@ export const PlayCockpit: React.FC = () => {
         </main>
 
         {/* =====================================================================
-            ZONE 3 (RIGHT): TABBED INTERACTIVE DECK (Map, Corkboard, Ballistic, Chase)
+            ZONE 3 (RIGHT): EXPANDABLE INTERACTIVE DECK (Blueprint, Corkboard, Ballistic, Chase)
             ===================================================================== */}
-        <section className="hidden lg:flex flex-col justify-between h-full rounded-xl bg-[#0B0E14] border border-[#C9A227]/30 shadow-2xl p-3 overflow-hidden">
-          {/* Deck Tab Bar */}
-          <div className="flex items-center justify-between pb-2 border-b border-stone-800 mb-2 font-mono text-xs">
-            <div className="flex gap-1">
+        <section className="hidden lg:flex flex-col justify-between h-full rounded-xl bg-[#0B0E14] border border-[#C9A227]/40 shadow-2xl p-3 overflow-hidden">
+          {/* Deck Tab Bar & Expand Controls */}
+          <div className="flex items-center justify-between pb-2.5 border-b border-stone-800 mb-2 font-mono text-xs">
+            <div className="flex gap-1.5">
               {[
                 { id: 'map', label: 'BLUEPRINT' },
                 { id: 'corkboard', label: 'EVIDENCE' },
@@ -278,9 +333,9 @@ export const PlayCockpit: React.FC = () => {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
                     activeTab === tab.id
-                      ? 'bg-[#F2D06B] text-black shadow-md'
+                      ? 'bg-[#F2D06B] text-black shadow-md scale-105'
                       : 'bg-stone-900 text-stone-400 hover:text-white'
                   }`}
                 >
@@ -288,14 +343,35 @@ export const PlayCockpit: React.FC = () => {
                 </button>
               ))}
             </div>
+
+            {/* Click-to-Expand / Theater Controls */}
+            <div className="flex items-center gap-1.5">
+              {/* Theater Fullscreen Modal Button */}
+              <button
+                type="button"
+                onClick={() => setIsTheaterOpen(true)}
+                title="Open Ultra-Large Theater View"
+                className="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 border border-amber-600/40 text-[#F2D06B] text-xs font-bold font-mono flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow"
+              >
+                <Expand className="w-3.5 h-3.5" />
+                <span>FULL THEATER</span>
+              </button>
+
+              {/* Grid Width Expansion Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsDeckExpanded(!isDeckExpanded)}
+                title={isDeckExpanded ? 'Shrink Deck Column' : 'Expand Deck Column'}
+                className="p-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 hover:text-white transition-all cursor-pointer"
+              >
+                {isDeckExpanded ? <Minimize2 className="w-4 h-4 text-amber-400" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
-          {/* Active Viewport */}
-          <div className="flex-1 overflow-y-auto">
-            {activeTab === 'map' && <TacticalBlueprintMap />}
-            {activeTab === 'corkboard' && <EvidenceCorkboard />}
-            {activeTab === 'combat' && <BallisticCombatView />}
-            {activeTab === 'chase' && <ChaseTrackView />}
+          {/* Active Viewport (Takes full available height) */}
+          <div className="flex-1 overflow-y-auto rounded-lg">
+            {renderActiveView()}
           </div>
         </section>
       </div>
@@ -304,27 +380,47 @@ export const PlayCockpit: React.FC = () => {
       <footer className="flex lg:hidden items-center justify-around h-14 border-t border-[#C9A227]/30 bg-[#0F131A] px-2 z-30 shrink-0 font-mono text-[10px]">
         <button
           type="button"
-          onClick={() => setActiveTab('map')}
+          onClick={() => {
+            setActiveTab('map')
+            setIsTheaterOpen(true)
+          }}
           className={`flex flex-col items-center gap-1 ${activeTab === 'map' ? 'text-[#F2D06B]' : 'text-stone-400'}`}
         >
           <MapPin className="w-4 h-4" />
-          <span>MAP</span>
+          <span>MAP ↗</span>
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('corkboard')}
+          onClick={() => {
+            setActiveTab('corkboard')
+            setIsTheaterOpen(true)
+          }}
           className={`flex flex-col items-center gap-1 ${activeTab === 'corkboard' ? 'text-[#F2D06B]' : 'text-stone-400'}`}
         >
           <FolderOpen className="w-4 h-4" />
-          <span>EVIDENCE</span>
+          <span>EVIDENCE ↗</span>
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('combat')}
+          onClick={() => {
+            setActiveTab('combat')
+            setIsTheaterOpen(true)
+          }}
           className={`flex flex-col items-center gap-1 ${activeTab === 'combat' ? 'text-rose-400' : 'text-stone-400'}`}
         >
           <Crosshair className="w-4 h-4" />
-          <span>COMBAT</span>
+          <span>COMBAT ↗</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('chase')
+            setIsTheaterOpen(true)
+          }}
+          className={`flex flex-col items-center gap-1 ${activeTab === 'chase' ? 'text-amber-400' : 'text-stone-400'}`}
+        >
+          <Zap className="w-4 h-4" />
+          <span>CHASE ↗</span>
         </button>
         <button
           type="button"
@@ -336,7 +432,67 @@ export const PlayCockpit: React.FC = () => {
         </button>
       </footer>
 
-      {/* Mobile Drawer for Operative Status */}
+      {/* 4. FULL THEATER OVERLAY MODAL (When user clicks EXPAND / FULL THEATER) */}
+      <AnimatePresence>
+        {isTheaterOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/90 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="w-full h-full max-w-7xl max-h-[96vh] rounded-2xl bg-[#080B10] border-2 border-[#C9A227] shadow-[0_0_120px_rgba(0,0,0,0.95)] flex flex-col p-3 sm:p-5 overflow-hidden"
+            >
+              {/* Theater Header with Big Navigation Tabs & Close */}
+              <div className="flex items-center justify-between pb-3 border-b border-stone-800 mb-3 shrink-0 font-mono">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="px-2.5 py-1 rounded bg-[#C9A227]/20 border border-[#C9A227] text-[#F2D06B] font-bold text-xs uppercase tracking-widest hidden sm:block">
+                    MAXIMIZED THEATER
+                  </div>
+                  {/* Big Tabs */}
+                  <div className="flex gap-1 sm:gap-2">
+                    {[
+                      { id: 'map', label: 'BLUEPRINT' },
+                      { id: 'corkboard', label: 'EVIDENCE' },
+                      { id: 'combat', label: 'COMBAT' },
+                      { id: 'chase', label: 'CHASE' }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={`px-3 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                          activeTab === tab.id
+                            ? 'bg-[#F2D06B] text-black shadow-lg scale-105'
+                            : 'bg-stone-900 text-stone-400 hover:text-white'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Close Theater Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsTheaterOpen(false)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 border border-red-600 text-red-300 font-mono text-xs sm:text-sm font-bold tracking-wider transition-all active:scale-95 cursor-pointer shadow"
+                >
+                  <Minimize2 className="w-4 h-4" />
+                  <span>CLOSE [ESC]</span>
+                </button>
+              </div>
+
+              {/* Theater Viewport (Full Screen Size) */}
+              <div className="flex-1 overflow-y-auto rounded-xl">
+                {renderActiveView()}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 5. Mobile Drawer for Operative Status */}
       <AnimatePresence>
         {mobileDrawerOpen && (
           <div className="fixed inset-0 z-50 flex items-end bg-black/80 backdrop-blur-sm lg:hidden">
