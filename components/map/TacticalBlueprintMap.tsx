@@ -3,7 +3,19 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useGameStore } from '@/lib/store'
-import { Shield, Eye, AlertTriangle, Key, Terminal, Radio, Navigation, CheckCircle2, Footprints } from 'lucide-react'
+import {
+  Shield,
+  Eye,
+  AlertTriangle,
+  Key,
+  Terminal,
+  Radio,
+  Navigation,
+  CheckCircle2,
+  Footprints,
+  Crosshair,
+  Skull
+} from 'lucide-react'
 
 export const TacticalBlueprintMap: React.FC = () => {
   const blueprint = useGameStore((s) => s.blueprint)
@@ -14,8 +26,11 @@ export const TacticalBlueprintMap: React.FC = () => {
   const revealedClues = useGameStore((s) => s.revealedClues)
   const visitedSceneIds = useGameStore((s) => s.visitedSceneIds || [])
   const latestActionOutcome = useGameStore((s) => s.latestActionOutcome)
+  const sentries = useGameStore((s) => s.sentries)
+  const neutralizeSentry = useGameStore((s) => s.neutralizeSentry)
 
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
+  const [selectedHidingSpot, setSelectedHidingSpot] = useState<string | null>(null)
 
   if (!blueprint) return null
 
@@ -48,7 +63,7 @@ export const TacticalBlueprintMap: React.FC = () => {
           <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#081b33] border border-[#0ea5e9]/50 text-[#38bdf8]">
             <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] animate-ping" />
             <span className="font-bold uppercase tracking-wider text-xs sm:text-sm">
-              TACTICAL BLUEPRINT // {blueprint.city.toUpperCase()}
+              CAD BLUEPRINT // {blueprint.city.toUpperCase()}
             </span>
           </div>
 
@@ -61,7 +76,7 @@ export const TacticalBlueprintMap: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/60 border border-stone-800 text-[10px] text-stone-300">
             <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span>RADAR: TRACKING OPERATIVE</span>
+            <span>HOSTILE PATROLS: {sentries.filter(s => s.status === 'patrolling').length} ACTIVE</span>
           </div>
           <div className={`flex items-center gap-1 px-2.5 py-1 rounded border text-[10px] sm:text-xs font-bold ${
             alertLevel >= 3
@@ -87,7 +102,7 @@ export const TacticalBlueprintMap: React.FC = () => {
         />
       </div>
 
-      {/* 4. Interactive SVG Architectural Floorplan */}
+      {/* 4. Interactive SVG Architectural Floorplan with Sentry Patrols */}
       <div className="relative flex-1 w-full flex items-center justify-center p-2 z-20">
         <svg
           viewBox="0 0 840 480"
@@ -96,7 +111,6 @@ export const TacticalBlueprintMap: React.FC = () => {
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            {/* Cyan Glow */}
             <filter id="cyanGlow" x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
@@ -104,7 +118,6 @@ export const TacticalBlueprintMap: React.FC = () => {
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            {/* Amber Operative Glow */}
             <filter id="amberGlow" x="-40%" y="-40%" width="180%" height="180%">
               <feGaussianBlur stdDeviation="5" result="blur" />
               <feMerge>
@@ -112,11 +125,22 @@ export const TacticalBlueprintMap: React.FC = () => {
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            {/* Active Room Spotlight Gradient */}
+            <filter id="redGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
             <radialGradient id="roomSpotlight" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35" />
               <stop offset="60%" stopColor="#0ea5e9" stopOpacity="0.15" />
               <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="sentryFlashlight" cx="0%" cy="50%" r="100%">
+              <stop offset="0%" stopColor="#facc15" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#eab308" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
             </radialGradient>
           </defs>
 
@@ -200,12 +224,12 @@ export const TacticalBlueprintMap: React.FC = () => {
           />
           <text x="580" y="85" fill="#34d399" fontSize="11" fontWeight="bold" fontFamily="monospace" opacity="0.9">SECTOR D: ROOFTOP HELIPAD</text>
 
-          {/* Dynamic Laser Tripwire */}
+          {/* Laser Tripwires */}
           <line x1="320" y1="260" x2="550" y2="260" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4 2" opacity="0.85">
             <animate attributeName="opacity" values="0.2;1;0.2" dur="2s" repeatCount="indefinite" />
           </line>
 
-          {/* Security Camera Conical Vision Cones */}
+          {/* Security Cameras */}
           <path d="M 65 60 L 160 140 L 220 70 Z" fill="#ef4444" fillOpacity="0.12" stroke="#ef4444" strokeWidth="0.8">
             <animateTransform
               attributeName="transform"
@@ -238,7 +262,6 @@ export const TacticalBlueprintMap: React.FC = () => {
                     strokeWidth={isUnlocked ? 3 : 1.5}
                     strokeDasharray={isUnlocked ? '6 4' : '3 4'}
                   />
-                  {/* Directional Path Arrow if adjacent */}
                   {currentScene?.id === scene.id && (
                     <circle
                       cx={(start.x + end.x) / 2}
@@ -274,7 +297,6 @@ export const TacticalBlueprintMap: React.FC = () => {
                 onMouseEnter={() => setHoveredNode(scene.id)}
                 onMouseLeave={() => setHoveredNode(null)}
               >
-                {/* Node Base Circle */}
                 <circle
                   cx={pos.x}
                   cy={pos.y}
@@ -283,8 +305,6 @@ export const TacticalBlueprintMap: React.FC = () => {
                   stroke={isAccessible ? '#38bdf8' : isVisited ? '#10b981' : '#334155'}
                   strokeWidth={isAccessible ? 3 : 1.5}
                 />
-
-                {/* Node Icon */}
                 <text
                   x={pos.x}
                   y={pos.y + 5}
@@ -297,8 +317,6 @@ export const TacticalBlueprintMap: React.FC = () => {
                 >
                   {isExtraction ? 'EXT' : isClimax ? 'OBJ' : isVisited && !isCurrent ? '✓' : scene.type === 'approach' ? '01' : '02'}
                 </text>
-
-                {/* Label Pill Below Node */}
                 <rect
                   x={pos.x - 75}
                   y={pos.y + 28}
@@ -327,14 +345,72 @@ export const TacticalBlueprintMap: React.FC = () => {
           })}
 
           {/* ===============================================================
-              VISUAL OPERATIVE TOKEN (ME / THE PLAYER TRAVERSING ROOMS)
+              DYNAMIC SENTRY PATROLS & FLASHLIGHT CONES (§14 Feature 1)
+              =============================================================== */}
+          {sentries.map((sentry) => {
+            if (sentry.status === 'neutralized') {
+              return (
+                <g key={sentry.id} transform={`translate(${sentry.x}, ${sentry.y})`}>
+                  <circle cx="0" cy="0" r="14" fill="#1c1917" stroke="#dc2626" strokeWidth="1.5" opacity="0.6" />
+                  <line x1="-8" y1="-8" x2="8" y2="8" stroke="#dc2626" strokeWidth="2" />
+                  <line x1="8" y1="-8" x2="-8" y2="8" stroke="#dc2626" strokeWidth="2" />
+                  <text x="0" y="24" textAnchor="middle" fill="#ef4444" fontSize="9" fontFamily="monospace">
+                    NEUTRALIZED
+                  </text>
+                </g>
+              )
+            }
+
+            return (
+              <g
+                key={sentry.id}
+                transform={`translate(${sentry.x}, ${sentry.y})`}
+                className="cursor-pointer"
+                onClick={() => neutralizeSentry(sentry.id)}
+              >
+                {/* Rotating Flashlight Vision Cone */}
+                <path
+                  d="M 0 0 L -45 -110 L 45 -110 Z"
+                  fill="url(#sentryFlashlight)"
+                  stroke="#facc15"
+                  strokeWidth="0.8"
+                  strokeOpacity="0.4"
+                  className="animate-pulse"
+                >
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    values="-30 0 0; 30 0 0; -30 0 0"
+                    dur="4s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+
+                {/* Sentry Body Disc */}
+                <circle cx="0" cy="0" r="15" fill="#991b1b" stroke="#fca5a5" strokeWidth="2" filter="url(#redGlow)" />
+                <circle cx="0" cy="0" r="8" fill="#ffffff" />
+                <line x1="0" y1="0" x2="0" y2="-12" stroke="#dc2626" strokeWidth="3" strokeLinecap="round" />
+
+                {/* Sentry Tag */}
+                <g transform="translate(0, 24)">
+                  <rect x="-55" y="-8" width="110" height="18" rx="4" fill="#000000" fillOpacity="0.85" stroke="#ef4444" strokeWidth="1" />
+                  <text x="0" y="4" textAnchor="middle" fill="#fca5a5" fontSize="8" fontWeight="bold" fontFamily="monospace">
+                    [SENTRY // TAP TO SILENT TAKEDOWN]
+                  </text>
+                </g>
+              </g>
+            )
+          })}
+
+          {/* ===============================================================
+              VISUAL OPERATIVE TOKEN (ME / PLAYER TRAVERSING VENUE)
               =============================================================== */}
           <motion.g
             animate={{ x: currentPos.x, y: currentPos.y }}
             transition={{ type: 'spring', damping: 22, stiffness: 130 }}
             className="pointer-events-none z-40"
           >
-            {/* Glowing Ambient Spotlight illuminating current room */}
+            {/* Glowing Ambient Spotlight */}
             <circle cx="0" cy="0" r="70" fill="url(#roomSpotlight)" />
 
             {/* Radar Pulse Expanding Waves */}
@@ -344,20 +420,17 @@ export const TacticalBlueprintMap: React.FC = () => {
             {/* Outer Operative Disc */}
             <circle cx="0" cy="0" r="20" fill="#f59e0b" stroke="#ffffff" strokeWidth="3" filter="url(#amberGlow)" />
 
-            {/* Operative Spy Icon (Sunglasses & Silhouette) */}
+            {/* Operative Spy Silhouette */}
             <path
               d="M -7 -2 C -7 -6 -3 -9 0 -9 C 3 -9 7 -6 7 -2 C 7 3 3 6 0 6 C -3 6 -7 3 -7 -2 Z"
               fill="#06090e"
             />
-            {/* Aviator Glasses Reflection */}
             <line x1="-5" y1="-2" x2="-1" y2="-2" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
             <line x1="1" y1="-2" x2="5" y2="-2" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
-            {/* Trenchcoat collar */}
             <path d="M -9 11 L 0 6 L 9 11 Z" fill="#06090e" />
 
-            {/* High-Contrast Floating "YOU ARE HERE" Banner */}
+            {/* High-Contrast "YOU ARE HERE" Banner */}
             <g transform="translate(0, -38)">
-              {/* Badge Background */}
               <rect
                 x="-80"
                 y="-14"
@@ -369,10 +442,8 @@ export const TacticalBlueprintMap: React.FC = () => {
                 strokeWidth="2"
                 filter="url(#cyanGlow)"
               />
-              {/* Pulsing Green Indicator Dot */}
               <circle cx="-68" cy="-2" r="3.5" fill="#22c55e" className="animate-ping" />
               <circle cx="-68" cy="-2" r="3.5" fill="#22c55e" />
-              {/* Operative Codename Text */}
               <text
                 x="6"
                 y="2"
@@ -390,7 +461,7 @@ export const TacticalBlueprintMap: React.FC = () => {
         </svg>
       </div>
 
-      {/* 5. Floating Tactical Action Result Toast (Directly Visible on Map!) */}
+      {/* 5. Floating Tactical Action Result Toast */}
       <AnimatePresence>
         {latestActionOutcome && (
           <motion.div

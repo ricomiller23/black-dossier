@@ -207,6 +207,109 @@ class SoundManager {
     osc.start(now)
     osc.stop(now + 0.4)
   }
+
+  // Radio Static / Waveform Sweep
+  public playRadioStatic() {
+    if (this.isMuted) return
+    this.initContext()
+    if (!this.ctx) return
+
+    const now = this.ctx.currentTime
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.15)
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.5
+    }
+    const noise = this.ctx.createBufferSource()
+    noise.buffer = buffer
+
+    const filter = this.ctx.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.frequency.setValueAtTime(1200 + Math.random() * 800, now)
+    filter.Q.setValueAtTime(3, now)
+
+    const gain = this.ctx.createGain()
+    gain.gain.setValueAtTime(0.12, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15)
+
+    noise.connect(filter)
+    filter.connect(gain)
+    gain.connect(this.ctx.destination)
+
+    noise.start(now)
+  }
+
+  // Morse Code Beep Tone
+  public playMorseBeep(freq = 750, duration = 0.08) {
+    if (this.isMuted) return
+    this.initContext()
+    if (!this.ctx) return
+
+    const now = this.ctx.currentTime
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(freq, now)
+
+    gain.gain.setValueAtTime(0.06, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration)
+
+    osc.connect(gain)
+    gain.connect(this.ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + duration)
+  }
+
+  // Polygraph Heartbeat Thump
+  public playHeartbeat() {
+    if (this.isMuted) return
+    this.initContext()
+    if (!this.ctx) return
+
+    const now = this.ctx.currentTime
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(80, now)
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.09)
+
+    gain.gain.setValueAtTime(0.18, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09)
+
+    osc.connect(gain)
+    gain.connect(this.ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.09)
+  }
+
+  // Attaché Gadget Equip Snap
+  public playGadgetSnap() {
+    if (this.isMuted) return
+    this.initContext()
+    if (!this.ctx) return
+
+    const now = this.ctx.currentTime
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(600, now)
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.06)
+
+    gain.gain.setValueAtTime(0.15, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06)
+
+    osc.connect(gain)
+    gain.connect(this.ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.06)
+  }
 }
 
 export const sound = new SoundManager()

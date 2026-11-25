@@ -241,3 +241,71 @@ export const EngineStateSchema = z.object({
   suggestedActions: z.array(z.string()).default([])
 })
 export type EngineState = z.infer<typeof EngineStateSchema>
+
+// =========================================================================
+// 5 NEW EXPANSION SCHEMAS (§14)
+// =========================================================================
+
+export const SigintChannelSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  frequencyMHz: z.number(),
+  waveform: z.enum(['sine', 'pulse', 'sawtooth', 'noise']),
+  intelTitle: z.string(),
+  intelContent: z.string(),
+  isDecrypted: z.boolean().default(false),
+  requiredTuningTolerance: z.number().default(0.15)
+})
+export type SigintChannel = z.infer<typeof SigintChannelSchema>
+
+export const InterrogationTacticSchema = z.enum([
+  'Cold Logic',
+  'Ideological Pressure',
+  'Blackmail Threat',
+  'Bribery & Safe Passage',
+  'Blunt Intimidation'
+])
+export type InterrogationTactic = z.infer<typeof InterrogationTacticSchema>
+
+export const InterrogationSubjectSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  alias: z.string(),
+  role: z.string(),
+  allegiance: z.string(),
+  currentBPM: z.number().default(78),
+  stress: z.number().min(0).max(100).default(25),
+  composure: z.number().min(0).max(100).default(75),
+  breakThreshold: z.number().default(80),
+  isBroken: z.boolean().default(false),
+  secretRevealed: z.string()
+})
+export type InterrogationSubject = z.infer<typeof InterrogationSubjectSchema>
+
+export const CampaignCitySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  country: z.string(),
+  x: z.number(), // Percentage on world map (0-100)
+  y: z.number(),
+  threatLevel: z.number().min(1).max(5),
+  syndicateCell: z.string(),
+  objective: z.string(),
+  cleared: z.boolean().default(false),
+  active: z.boolean().default(false)
+})
+export type CampaignCity = z.infer<typeof CampaignCitySchema>
+
+export const SentryUnitSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  sectorId: z.string(),
+  x: z.number(),
+  y: z.number(),
+  facingAngle: z.number(), // Degrees
+  patrolRoute: z.array(z.object({ x: z.number(), y: z.number() })),
+  currentWaypoint: z.number().default(0),
+  status: z.enum(['patrolling', 'investigating', 'alerted', 'neutralized']).default('patrolling'),
+  awareness: z.number().min(0).max(100).default(0)
+})
+export type SentryUnit = z.infer<typeof SentryUnitSchema>

@@ -7,6 +7,10 @@ import { TacticalBlueprintMap } from '../map/TacticalBlueprintMap'
 import { EvidenceCorkboard } from './EvidenceCorkboard'
 import { BallisticCombatView } from '../combat/BallisticCombatView'
 import { ChaseTrackView } from '../chase/ChaseTrackView'
+import { AudioInterceptDecoder } from '../sigint/AudioInterceptDecoder'
+import { BriefcaseLoadout } from '../armory/BriefcaseLoadout'
+import { PolygraphInterrogation } from '../dialogue/PolygraphInterrogation'
+import { GlobalCampaignAtlas } from '../campaign/GlobalCampaignAtlas'
 import { AgentPortrait } from './AgentPortrait'
 import {
   Shield,
@@ -28,8 +32,14 @@ import {
   Expand,
   CheckCircle2,
   Footprints,
-  Sparkles
+  Sparkles,
+  Radio,
+  Briefcase,
+  Activity,
+  Globe
 } from 'lucide-react'
+
+type DeckTab = 'map' | 'corkboard' | 'combat' | 'chase' | 'sigint' | 'armory' | 'interrogate' | 'atlas'
 
 export const PlayCockpit: React.FC = () => {
   const agent = useGameStore((s) => s.agent)
@@ -47,7 +57,7 @@ export const PlayCockpit: React.FC = () => {
   const finishMission = useGameStore((s) => s.finishMission)
   const latestActionOutcome = useGameStore((s) => s.latestActionOutcome)
 
-  const [activeTab, setActiveTab] = useState<'map' | 'corkboard' | 'combat' | 'chase'>('map')
+  const [activeTab, setActiveTab] = useState<DeckTab>('map')
   const [customAction, setCustomAction] = useState('')
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [isDeckExpanded, setIsDeckExpanded] = useState(false)
@@ -91,8 +101,27 @@ export const PlayCockpit: React.FC = () => {
         return <BallisticCombatView />
       case 'chase':
         return <ChaseTrackView />
+      case 'sigint':
+        return <AudioInterceptDecoder />
+      case 'armory':
+        return <BriefcaseLoadout />
+      case 'interrogate':
+        return <PolygraphInterrogation />
+      case 'atlas':
+        return <GlobalCampaignAtlas />
     }
   }
+
+  const deckTabs: { id: DeckTab; label: string; icon: any }[] = [
+    { id: 'map', label: 'MAP', icon: MapPin },
+    { id: 'corkboard', label: 'EVIDENCE', icon: FolderOpen },
+    { id: 'combat', label: 'COMBAT', icon: Crosshair },
+    { id: 'chase', label: 'CHASE', icon: Zap },
+    { id: 'sigint', label: 'SIGINT', icon: Radio },
+    { id: 'interrogate', label: 'POLYGRAPH', icon: Activity },
+    { id: 'armory', label: 'ARMORY', icon: Briefcase },
+    { id: 'atlas', label: 'ATLAS', icon: Globe }
+  ]
 
   return (
     <div className="relative min-h-screen h-[100dvh] max-h-[100dvh] w-full bg-[#07090D] text-[#EDE5D8] flex flex-col justify-between overflow-hidden select-none">
@@ -111,12 +140,12 @@ export const PlayCockpit: React.FC = () => {
           {/* Active Sector Location Tag in Top Bar */}
           <div className="hidden lg:flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-600 text-cyan-300 text-[10px] font-bold">
             <Footprints className="w-3 h-3 text-cyan-400" />
-            <span>SECTOR: {currentScene?.venueName || "Outer Perimeter"}</span>
+            <span>SECTOR: {currentScene?.venueName || 'Outer Perimeter'}</span>
           </div>
         </div>
 
         {/* Global Controls & Metrics */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-1.5 text-[11px]">
             <span className="text-stone-400">ALERT:</span>
             <span
@@ -128,12 +157,26 @@ export const PlayCockpit: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[11px]">
+          <div className="flex items-center gap-1.5 text-[11px] hidden sm:flex">
             <span className="text-stone-400">COVER:</span>
             <span className="font-bold text-cyan-400">{coverIntegrity}%</span>
           </div>
 
           <div className="h-4 w-[1px] bg-stone-700 mx-1 hidden sm:block" />
+
+          {/* Quick Global Atlas shortcut */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('atlas')
+              setIsTheaterOpen(true)
+            }}
+            title="Open Global Campaign Atlas"
+            className="px-2.5 py-1 rounded text-xs font-mono font-bold bg-blue-950/80 hover:bg-blue-900 border border-blue-600 text-blue-300 flex items-center gap-1 cursor-pointer hidden md:flex shadow"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>GLOBAL ATLAS</span>
+          </button>
 
           {/* Expand View Quick Toggle */}
           <button
@@ -247,7 +290,7 @@ export const PlayCockpit: React.FC = () => {
             {/* Inventory List */}
             <div className="mt-4 pt-3 border-t border-stone-800">
               <span className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest block mb-2">
-                EQUIPPED HARDWARE
+                EQUIPPED HARDWARE ({agent.inventory.length})
               </span>
               <div className="flex flex-col gap-1.5 font-mono text-xs">
                 {agent.inventory.map((item) => (
@@ -386,36 +429,34 @@ export const PlayCockpit: React.FC = () => {
         </main>
 
         {/* =====================================================================
-            ZONE 3 (RIGHT): EXPANDABLE INTERACTIVE DECK (Blueprint, Corkboard, Ballistic, Chase)
+            ZONE 3 (RIGHT): EXPANDABLE INTERACTIVE DECK WITH 8 FULL THEATER SYSTEMS
             ===================================================================== */}
         <section className="hidden lg:flex flex-col justify-between h-full rounded-xl bg-[#0B0E14] border border-[#C9A227]/40 shadow-2xl p-3 overflow-hidden">
           {/* Deck Tab Bar & Expand Controls */}
           <div className="flex items-center justify-between pb-2.5 border-b border-stone-800 mb-2 font-mono text-xs">
-            <div className="flex gap-1.5">
-              {[
-                { id: 'map', label: 'BLUEPRINT' },
-                { id: 'corkboard', label: 'EVIDENCE' },
-                { id: 'combat', label: 'COMBAT' },
-                { id: 'chase', label: 'CHASE' }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-3.5 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-                    activeTab === tab.id
-                      ? 'bg-[#F2D06B] text-black shadow-md scale-105'
-                      : 'bg-stone-900 text-stone-400 hover:text-white'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-1">
+              {deckTabs.map((tab) => {
+                const Icon = tab.icon
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-2.5 py-1.5 rounded-lg font-bold text-[11px] sm:text-xs transition-all flex items-center gap-1 cursor-pointer ${
+                      activeTab === tab.id
+                        ? 'bg-[#F2D06B] text-black shadow-md scale-105'
+                        : 'bg-stone-900 text-stone-400 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                )
+              })}
             </div>
 
             {/* Click-to-Expand / Theater Controls */}
-            <div className="flex items-center gap-1.5">
-              {/* Theater Fullscreen Modal Button */}
+            <div className="flex items-center gap-1.5 shrink-0 ml-2">
               <button
                 type="button"
                 onClick={() => setIsTheaterOpen(true)}
@@ -423,10 +464,9 @@ export const PlayCockpit: React.FC = () => {
                 className="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 border border-amber-600/40 text-[#F2D06B] text-xs font-bold font-mono flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow"
               >
                 <Expand className="w-3.5 h-3.5" />
-                <span>FULL THEATER</span>
+                <span>THEATER</span>
               </button>
 
-              {/* Grid Width Expansion Toggle */}
               <button
                 type="button"
                 onClick={() => setIsDeckExpanded(!isDeckExpanded)}
@@ -446,62 +486,37 @@ export const PlayCockpit: React.FC = () => {
       </div>
 
       {/* 3. MOBILE BOTTOM NAVIGATION DOCK (Viewport < 1024px) */}
-      <footer className="flex lg:hidden items-center justify-around h-14 border-t border-[#C9A227]/30 bg-[#0F131A] px-2 z-30 shrink-0 font-mono text-[10px]">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('map')
-            setIsTheaterOpen(true)
-          }}
-          className={`flex flex-col items-center gap-1 ${activeTab === 'map' ? 'text-[#F2D06B]' : 'text-stone-400'}`}
-        >
-          <MapPin className="w-4 h-4" />
-          <span>MAP ↗</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('corkboard')
-            setIsTheaterOpen(true)
-          }}
-          className={`flex flex-col items-center gap-1 ${activeTab === 'corkboard' ? 'text-[#F2D06B]' : 'text-stone-400'}`}
-        >
-          <FolderOpen className="w-4 h-4" />
-          <span>EVIDENCE ↗</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('combat')
-            setIsTheaterOpen(true)
-          }}
-          className={`flex flex-col items-center gap-1 ${activeTab === 'combat' ? 'text-rose-400' : 'text-stone-400'}`}
-        >
-          <Crosshair className="w-4 h-4" />
-          <span>COMBAT ↗</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('chase')
-            setIsTheaterOpen(true)
-          }}
-          className={`flex flex-col items-center gap-1 ${activeTab === 'chase' ? 'text-amber-400' : 'text-stone-400'}`}
-        >
-          <Zap className="w-4 h-4" />
-          <span>CHASE ↗</span>
-        </button>
+      <footer className="flex lg:hidden items-center justify-around h-14 border-t border-[#C9A227]/30 bg-[#0F131A] px-2 z-30 shrink-0 font-mono text-[9px]">
+        {deckTabs.slice(0, 5).map((tab) => {
+          const Icon = tab.icon
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab.id)
+                setIsTheaterOpen(true)
+              }}
+              className={`flex flex-col items-center gap-0.5 ${
+                activeTab === tab.id ? 'text-[#F2D06B]' : 'text-stone-400'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          )
+        })}
         <button
           type="button"
           onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-          className="flex flex-col items-center gap-1 text-cyan-400"
+          className="flex flex-col items-center gap-0.5 text-cyan-400"
         >
           <Shield className="w-4 h-4" />
           <span>STATUS</span>
         </button>
       </footer>
 
-      {/* 4. FULL THEATER OVERLAY MODAL (When user clicks EXPAND / FULL THEATER) */}
+      {/* 4. FULL THEATER OVERLAY MODAL (When user clicks THEATER) */}
       <AnimatePresence>
         {isTheaterOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/90 backdrop-blur-md">
@@ -511,33 +526,32 @@ export const PlayCockpit: React.FC = () => {
               exit={{ opacity: 0, scale: 0.96 }}
               className="w-full h-full max-w-7xl max-h-[96vh] rounded-2xl bg-[#080B10] border-2 border-[#C9A227] shadow-[0_0_120px_rgba(0,0,0,0.95)] flex flex-col p-3 sm:p-5 overflow-hidden"
             >
-              {/* Theater Header with Big Navigation Tabs & Close */}
+              {/* Theater Header with All 8 Navigation Tabs & Close */}
               <div className="flex items-center justify-between pb-3 border-b border-stone-800 mb-3 shrink-0 font-mono">
-                <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                   <div className="px-2.5 py-1 rounded bg-[#C9A227]/20 border border-[#C9A227] text-[#F2D06B] font-bold text-xs uppercase tracking-widest hidden sm:block">
                     MAXIMIZED THEATER
                   </div>
                   {/* Big Tabs */}
-                  <div className="flex gap-1 sm:gap-2">
-                    {[
-                      { id: 'map', label: 'BLUEPRINT' },
-                      { id: 'corkboard', label: 'EVIDENCE' },
-                      { id: 'combat', label: 'COMBAT' },
-                      { id: 'chase', label: 'CHASE' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setActiveTab(tab.id as any)}
-                        className={`px-3 sm:px-4 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-                          activeTab === tab.id
-                            ? 'bg-[#F2D06B] text-black shadow-lg scale-105'
-                            : 'bg-stone-900 text-stone-400 hover:text-white'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5">
+                    {deckTabs.map((tab) => {
+                      const Icon = tab.icon
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1 cursor-pointer ${
+                            activeTab === tab.id
+                              ? 'bg-[#F2D06B] text-black shadow-lg scale-105'
+                              : 'bg-stone-900 text-stone-400 hover:text-white'
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                          <span>{tab.label}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
 
