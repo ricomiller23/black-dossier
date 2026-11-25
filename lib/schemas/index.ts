@@ -309,3 +309,133 @@ export const SentryUnitSchema = z.object({
   awareness: z.number().min(0).max(100).default(0)
 })
 export type SentryUnit = z.infer<typeof SentryUnitSchema>
+
+// =========================================================================
+// TEN EXPANSION SYSTEMS SCHEMAS (§15 Tradecraft Expansion Modules)
+// =========================================================================
+
+// 1. Microfilm Darkroom
+export const DarkroomRollSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  exposureSeconds: z.number().default(0),
+  stage: z.enum(['raw', 'developer', 'stop_bath', 'fixer', 'developed', 'ruined']).default('raw'),
+  clueRevealed: z.string(),
+  isInspected: z.boolean().default(false)
+})
+export type DarkroomRoll = z.infer<typeof DarkroomRollSchema>
+
+// 2. Cover Passport & Legends
+export const CoverLegendSchema = z.object({
+  id: z.string(),
+  aliasName: z.string(),
+  nationality: z.string(),
+  occupation: z.string(),
+  visaStamps: z.array(z.string()),
+  suspicionPercent: z.number().min(0).max(100).default(10),
+  isActive: z.boolean().default(false),
+  isBurned: z.boolean().default(false)
+})
+export type CoverLegend = z.infer<typeof CoverLegendSchema>
+
+// 3. Dead-Drop & Asset Network
+export const DeadDropSiteSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  locationDesc: z.string(),
+  assetContact: z.string(),
+  intelPayload: z.string(),
+  cashReward: z.number().default(250),
+  status: z.enum(['unvisited', 'retrieved', 'sabotage_ordered', 'compromised']).default('unvisited')
+})
+export type DeadDropSite = z.infer<typeof DeadDropSiteSchema>
+
+// 4. Counter-Surveillance "Dry Cleaning" Tail
+export const SurveillanceTailSchema = z.object({
+  activeTail: z.boolean().default(true),
+  tailAgency: z.string().default('Stasi Greifkommando'),
+  threatLevelPercent: z.number().min(0).max(100).default(45),
+  turnsTracked: z.number().default(1),
+  lastManeuver: z.string().nullable().default(null)
+})
+export type SurveillanceTail = z.infer<typeof SurveillanceTailSchema>
+
+// 5. Stethoscope Wall Safe
+export const SafeCrackingStateSchema = z.object({
+  targetCombo: z.tuple([z.number(), z.number(), z.number()]),
+  currentDial: z.number().min(0).max(99).default(0),
+  crackedSteps: z.number().min(0).max(3).default(0),
+  isCracked: z.boolean().default(false),
+  alarmTripped: z.boolean().default(false),
+  vaultBearerBonds: z.number().default(850),
+  vaultClassifiedDoc: z.string()
+})
+export type SafeCrackingState = z.infer<typeof SafeCrackingStateSchema>
+
+// 6. Clandestine Chemical Lab
+export const ChemicalCompoundSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  formula: z.string(),
+  effect: z.string(),
+  costReagents: z.number(),
+  crafted: z.boolean().default(false)
+})
+export type ChemicalCompound = z.infer<typeof ChemicalCompoundSchema>
+
+// 7. Internal Mole Hunt Board
+export const MoleSuspectSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  stationRole: z.string(),
+  dossierSnippet: z.string(),
+  suspicionScore: z.number().min(0).max(100),
+  interceptProof: z.string(),
+  isTrueMole: z.boolean().default(false),
+  isFormallyAccused: z.boolean().default(false)
+})
+export type MoleSuspect = z.infer<typeof MoleSuspectSchema>
+
+// 8. Embassy Gala Social Eavesdropping
+export const GalaGuestSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  title: z.string(),
+  faction: z.string(),
+  whisperedSecret: z.string(),
+  suspicionRisk: z.number(),
+  eavesdropped: z.boolean().default(false)
+})
+export type GalaGuest = z.infer<typeof GalaGuestSchema>
+
+export const EmbassyGalaStateSchema = z.object({
+  composure: z.number().min(0).max(100).default(85),
+  suspicion: z.number().min(0).max(100).default(15),
+  selectedGuestId: z.string().nullable().default(null),
+  secretsExtracted: z.number().default(0)
+})
+export type EmbassyGalaState = z.infer<typeof EmbassyGalaStateSchema>
+
+// 9. Emergency Border Exfiltration
+export const ExfiltrationRouteSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  borderLocation: z.string(),
+  description: z.string(),
+  requiredConcealment: z.string(),
+  baseSuccessRate: z.number(),
+  isExecuted: z.boolean().default(false),
+  outcomeNarrative: z.string().nullable().default(null)
+})
+export type ExfiltrationRoute = z.infer<typeof ExfiltrationRouteSchema>
+
+// 10. Operative Service Record & Scars
+export const CareerRecordSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  type: z.enum(['medal', 'scar', 'neurosis']),
+  citation: z.string(),
+  dateAwarded: z.string(),
+  statModifier: z.string()
+})
+export type CareerRecord = z.infer<typeof CareerRecordSchema>
